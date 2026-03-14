@@ -95,35 +95,45 @@ const QUOTES = [
 function generateWorm() {
   const cx = S / 2, cy = S / 2;
   let pts = [];
-  const numSegs = 85; // Shorter body
+  const numSegs = 85;
 
-  // Start with head biased up
-  let x = cx + rand(-50, 50);
-  let y = cy - rand(100, 200);
-  
-  let angle = rand(Math.PI * 1.3, Math.PI * 1.7); 
-  
-  let stepLen = rand(9, 14); // Shorter steps
-  let curvature = rand(0.05, 0.15); // More scrunch
-  let squiggleAmp = rand(0.1, 0.3);
+  const sitting = chance(0.6); // moderate skew toward sitting upright
+
+  let x, y, angle;
+  if (sitting) {
+    // Head high, body flows downward — worm "sitting" and looking at you
+    x = cx + rand(-70, 70);
+    y = cy - rand(220, 320);
+    angle = Math.PI / 2 + rand(-0.5, 0.5); // mostly downward, slight lean
+  } else {
+    // Classic meandering pose
+    x = cx + rand(-50, 50);
+    y = cy - rand(100, 200);
+    angle = rand(Math.PI * 1.3, Math.PI * 1.7);
+  }
+
+  let stepLen = rand(9, 14);
+  // Sitting worms: looser curves so the body drapes/meanders rather than coiling tight
+  let curvature = sitting ? rand(0.04, 0.10) : rand(0.05, 0.15);
+  let squiggleAmp = sitting ? rand(0.08, 0.20) : rand(0.1, 0.3);
   let squiggleFreq = rand(0.1, 0.2);
-  
+
   let currentCurvature = (chance(0.5) ? 1 : -1) * curvature;
 
   for (let i = 0; i < numSegs; i++) {
     pts.push({ x, y });
-    
+
     let wiggle = Math.sin(i * squiggleFreq) * squiggleAmp;
     let jitter = rand(-0.08, 0.08);
-    
+
     // Gravity pulls tail down
     let gravity = 0.07;
     let targetAngle = Math.PI / 2;
-    
+
     angle += wiggle + jitter + currentCurvature;
     angle = angle * (1 - gravity) + targetAngle * gravity;
-    
-    if (chance(0.1)) currentCurvature = (chance(0.5) ? 1 : -1) * curvature;
+
+    if (chance(sitting ? 0.07 : 0.1)) currentCurvature = (chance(0.5) ? 1 : -1) * curvature;
 
     x += Math.cos(angle) * stepLen;
     y += Math.sin(angle) * stepLen;
@@ -135,8 +145,11 @@ function generateWorm() {
   const yMin = Math.min(...pts.map(p => p.y));
   const yMax = Math.max(...pts.map(p => p.y));
   const ox = cx - (xMin + (xMax - xMin) / 2);
-  const oy = cy - (yMin + (yMax - yMin) / 2);
-  
+  // Sitting worms: anchor head near top of canvas rather than bbox-center
+  const oy = sitting
+    ? S * 0.18 - pts[0].y
+    : cy - (yMin + (yMax - yMin) / 2);
+
   return pts.map(p => ({ x: p.x + ox, y: p.y + oy }));
 }
 
