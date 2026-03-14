@@ -164,24 +164,21 @@ function drawWormBody(pts, pal, headR, bodyR) {
   ctx.stroke();
   ctx.restore();
 
-  // 2. Bold Outer Silhouette - drawn as full paths to avoid dark blob buildup at bends
+  // 2. Bold Outer Silhouette
   ctx.save();
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.strokeStyle = '#111';
-
-  const headEnd = Math.round(n * 0.15);
-  ctx.lineWidth = headR * 2 + 12;
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i <= headEnd; i++) ctx.lineTo(pts[i].x, pts[i].y);
-  ctx.stroke();
-
-  ctx.lineWidth = bodyR * 2 + 12;
-  ctx.beginPath();
-  ctx.moveTo(pts[headEnd].x, pts[headEnd].y);
-  for (let i = headEnd + 1; i < n; i++) ctx.lineTo(pts[i].x, pts[i].y);
-  ctx.stroke();
-
+  for (let i = 0; i < n - 1; i++) {
+    const t = i / (n - 1);
+    const r = getR(t);
+    const isClit = t > clitStart && t < clitEnd;
+    const finalR = isClit ? r * 1.15 : r;
+    ctx.lineWidth = finalR * 2 + 12;
+    ctx.beginPath();
+    ctx.moveTo(pts[i].x, pts[i].y);
+    ctx.lineTo(pts[i+1].x, pts[i+1].y);
+    ctx.stroke();
+  }
   ctx.restore();
 
   // 3. Layered Body Rendering (Tail to Head) with LIGHT internal lines
