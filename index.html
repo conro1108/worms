@@ -164,24 +164,24 @@ function drawWormBody(pts, pal, headR, bodyR) {
   ctx.stroke();
   ctx.restore();
 
-  // 2. Bold Outer Silhouette
-  // Draw the entire worm path once with a very thick dark stroke to establish the outer border
+  // 2. Bold Outer Silhouette - drawn as full paths to avoid dark blob buildup at bends
   ctx.save();
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.strokeStyle = '#111';
-  
-  // We draw this in segments to account for the taper in the silhouette
-  for (let i = 0; i < n - 1; i++) {
-    const t = i / (n - 1);
-    const r = getR(t);
-    const isClit = t > clitStart && t < clitEnd;
-    const finalR = isClit ? r * 1.15 : r;
-    ctx.lineWidth = finalR * 2 + 12; // Outline thickness
-    ctx.beginPath();
-    ctx.moveTo(pts[i].x, pts[i].y);
-    ctx.lineTo(pts[i+1].x, pts[i+1].y);
-    ctx.stroke();
-  }
+
+  const headEnd = Math.round(n * 0.15);
+  ctx.lineWidth = headR * 2 + 12;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i <= headEnd; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.stroke();
+
+  ctx.lineWidth = bodyR * 2 + 12;
+  ctx.beginPath();
+  ctx.moveTo(pts[headEnd].x, pts[headEnd].y);
+  for (let i = headEnd + 1; i < n; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.stroke();
+
   ctx.restore();
 
   // 3. Layered Body Rendering (Tail to Head) with LIGHT internal lines
@@ -207,6 +207,19 @@ function drawWormBody(pts, pal, headR, bodyR) {
     ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+function drawHeart(x, y, r, color) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y + r * 0.8);
+  ctx.bezierCurveTo(x - r * 2, y + r * 0.4, x - r * 2, y - r, x - r * 0.7, y - r);
+  ctx.bezierCurveTo(x - r * 0.2, y - r, x, y - r * 0.6, x, y - r * 0.3);
+  ctx.bezierCurveTo(x, y - r * 0.6, x + r * 0.2, y - r, x + r * 0.7, y - r);
+  ctx.bezierCurveTo(x + r * 2, y - r, x + r * 2, y + r * 0.4, x, y + r * 0.8);
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawFace(head, headR, eyeStyle, mouthStyle, extras) {
